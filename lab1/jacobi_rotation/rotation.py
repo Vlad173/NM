@@ -1,10 +1,11 @@
 import numpy as np
+from tabulate import tabulate
 
 
 def create_u_matrix(a, i, j):
     n = a.shape[0]
     ang = 0.5 * np.arctan(2 * a[i][j] / (a[i][i] - a[j][j]))    
-    u = np.eye(n)
+    u = np.eye(n) 
     u[i][j] = -np.sin(ang)
     u[j][i] = np.sin(ang)
     u[j][j] = np.cos(ang)
@@ -42,10 +43,10 @@ def jacobi(a, eps=0.001):
         if t < eps:
             break
 
-    eigen_vectors = np.eye(3)
+    eigen_vectors = np.eye(n)
     for u in u_matrixes:
         eigen_vectors = eigen_vectors.dot(u)
-    
+
     eigen_values = []
     for i in range(n):
         eigen_values.append(a[i][i])
@@ -57,14 +58,19 @@ def main():
     n = int(input())
     eps = float(input())
     a = np.array([list(map(float, input().split())) for _ in range(n)])
-    print("Matrix A:\n", a, '\n')
+    print("Matrix A:\n", tabulate(a), '\n')
 
     vectors, values = jacobi(a, eps)
-    print("Eigen vectors:")
-    for i in range(n):
-        print(vectors[:, i])
+    print("Jacobi eigen vectors:")
+    print(tabulate(vectors))
     print()
-    print("Eigen values:\n", values, sep="")
+    print("Jacobi eigen values:\n", values, sep="")
+    
+    values, vectors = np.linalg.eig(a)
+    print("\nNumpy eigen vectors:")
+    print(tabulate(vectors))
+    print()
+    print("Numpy eigen values:\n", values, sep="")
 
 
 if  __name__ == "__main__":

@@ -1,8 +1,10 @@
 import numpy as np
 import math
 import copy
+from tabulate import tabulate
 
-
+# Погрешность
+# Euclidean distance
 def accuracy(x_old, x_new, eps):
     sum_up = 0
     sum_low = 0
@@ -15,10 +17,10 @@ def accuracy(x_old, x_new, eps):
 
 def iterative(a, b, eps=0.001):
     count = len(b)
-    x = [0. for k in range(count)]
+    x = np.array([0. for k in range(count)])
     
     it = 0
-    print("Iterations (iterative method):")
+    print("Iterative method:")
     while it < 100:
         x_prev = copy.deepcopy(x)
         for i in range(count):
@@ -36,10 +38,10 @@ def iterative(a, b, eps=0.001):
 
 def seidel(a, b, eps=0.001):
     count = len(b)
-    x = [0. for k in range(count)]
+    x = np.array([0. for k in range(count)])
     
     it = 0
-    print("Iterations (Gauss-Seidel method):")
+    print("Gauss-Seidel method:")
     while it < 100:
         x_prev = copy.deepcopy(x)
         for i in range(count):
@@ -59,12 +61,12 @@ def seidel(a, b, eps=0.001):
 
 def main():
     # input
-    np.set_printoptions(precision=5)
+    np.set_printoptions(precision=8)
     n = int(input())
     eps = float(input())
     a = np.array([list(map(float, input().split())) for _ in range(n)])
     b = np.array([float(input()) for _ in range(n)])
-    print("Matrix A:\n", a, '\n')
+    print("Matrix A:\n", tabulate(a), '\n')
     print("Matrix B:\n", b, '\n')
 
     x = iterative(a, b, eps)
@@ -72,7 +74,10 @@ def main():
     print()
     x = seidel(a, b, eps) 
     print("x =", x)
-     
+
+    print("\nNumpy:")
+    print("x =", np.linalg.solve(a, b))
+
 
 if __name__ == "__main__":
     main()

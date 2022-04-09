@@ -1,13 +1,11 @@
 import numpy as np
+from tabulate import tabulate
 
 
 def lu(a):
     n = a.shape[0]
     l = np.zeros((n, n))
     u = a.copy()
-    for i in range(n):
-        for j in range(i, n):
-            l[j][i] = u[j][i] / u[i][i]
 
     for k in range (1, n):
         for i in range(k - 1, n):
@@ -23,25 +21,28 @@ def solve_lu(a, b, p=True):
     n = a.shape[0]
     l, u = lu(a)
     if p:
-        print("Matrix L:\n", l, '\n')
-        print("Matrix U:\n", u, '\n')
-        print("Matrix L * U:\n", l.dot(u), '\n')
-    # L * y = b
-    y = []
-    for i in range(n):
-        s = 0
-        for j in range(i):
-            s += y[j] * l[i][j]
-        y.append(b[i] - s)
-    print(y)
+        print("\nMatrix L:\n", tabulate(l), '\n')
+        print("Matrix U:\n", tabulate(u), '\n')
+        print("Matrix L * U:\n", tabulate(l.dot(u)), '\n')
+    # 1. L * y = b
+    #y = []
+    #for i in range(n):
+    #    s = 0
+    #    for j in range(i):
+    #        s += y[j] * l[i][j]
+    #    y.append(b[i] - s)
+
+    y = np.linalg.solve(l, b)
+
     # 2. U * x = y
-    x = []
-    for i in range(n):
-        s = 0
-        for j in range(i):
-            s += x[j] * u[n - i - 1][n - j - 1]
-        x.append((y[n - 1 - i] - s) / u[n - i - 1][n - i - 1])
-    x.reverse()
+    #x = []
+    #for i in range(n):
+    #    s = 0
+    #    for j in range(i):
+    #        s += x[j] * u[n - i - 1][n - j - 1]
+    #    x.append((y[n - 1 - i] - s) / u[n - i - 1][n - i - 1])
+    #x.reverse()
+    x = np.linalg.solve(u, y)
     return np.array(x)
 
 
@@ -64,26 +65,25 @@ def inverse(A):
 
 
 def main():
-    # input
     np.set_printoptions(precision=2)
-    n = int(input("Enter the matrix size: "))
-    print(f"Enter matrix A:")
+    n = int(input())
     a = np.array([list(map(float, input().split())) for _ in range(n)])
-    print(f"Enter matrix B:")
     b = [float(input()) for _ in range(n)]
-    print()
 
-    # LU decomposition
+    print("Matrix A:", tabulate(a), sep='\n')
+    print("\nMatrix B:")
+    print(b)
+
     x = solve_lu(a, b)
-    for i, x_i in enumerate(x):
-        print(f"x{i + 1} = {x_i}")
+    print("\nLU:")
     print("x =", x, '\n')
+    print("Det =", det(a), '\n')
+    print("Inverse:\n", tabulate(inverse(a)))
 
-    # Determinant
-#    print("Det =", det(a), '\n')
-    
-    # Inverse
-#    print("Inverse:\n", inverse(a))
+    print("\nNumpy:")
+    print("x =", np.linalg.solve(a, b), '\n')
+    print("Det =", np.linalg.det(a), '\n')
+    print("Inverse:\n", tabulate(np.linalg.inv(a)))
 
 
 if __name__ == "__main__":

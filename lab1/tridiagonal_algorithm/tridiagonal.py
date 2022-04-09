@@ -1,43 +1,54 @@
 import numpy as np
+from tabulate import tabulate
 
 
-def solution(a, b):
-    n = len(a)
-    x = np.array([0. for _ in range(n)])
-    v = [0 for _ in range(n)]
-    u = [0 for _ in range(n)]
-    # Прямой ход
-    v[0] = a[0][1] / -a[0][0]
-    u[0] = - b[0] / -a[0][0]
-    for i in range(1, n - 1):
-        v[i] = a[i][i + 1] / (-a[i][i] - a[i][i - 1] * v[i - 1])
-        u[i] = (a[i][i - 1] * u[i - 1] - b[i]) / (-a[i][i] - a[i][i - 1] * v[i - 1])
-    v[n - 1] = 0
-    u[n - 1] = (a[n - 1][n - 2] * u[n - 2] - b[n - 1]) / (-a[n - 1][n - 1] - a[n - 1][n - 2] * v[n - 2])
+def tdma(a, b, c, d):
+    n = len(d)
+    ac, bc, cc, dc = map(np.array, (a, b, c, d))
+    for it in range(1, n):
+        mc = ac[it - 1] / bc[it - 1]
+        bc[it] = bc[it] - mc * cc[it - 1] 
+        dc[it] = dc[it] - mc * dc[it - 1]
+        	    
+    x = np.copy(b)
+    x[-1] = dc[-1] / bc[-1]
+
+    for i in range(n - 2, -1, -1):
+        x[i] = (dc[i] - cc[i] * x[i + 1]) / bc[i]
+
+    return x
+
+
+def get_diagonals(m):
+    n = len(m)
+    a, b, c = [], [], [] 
     
-    # Обратный ход
-    x[n - 1] = u[n - 1]
-    for i in range(n - 1, 0, -1):
-        x[i - 1] = v[i - 1] * x[i] + u[i - 1]
-    return x    
-                
+    for i in range(n):
+        if i != 0:
+            a.append(m[i][i - 1])
+        if i != n - 1:
+            c.append(m[i][i + 1])
+        b.append(m[i][i])
+    return a, b, c
+
 
 def main():
     # input
     np.set_printoptions(precision=5)
-    n = int(input("Enter the matrix size: "))
-    print(f"Enter matrix A:")
+    n = int(input())
     a = np.array([list(map(float, input().split())) for _ in range(n)])
-    print(f"Enter matrix B:")
+    x, y, z = get_diagonals(a)
     b = np.array([float(input()) for _ in range(n)])
-    print("Matrix A:\n", a, '\n')
-    print("Matrix B:", b, '\n')
+    print("Matrix A:\n", tabulate(a), '\n')
+    print("Matrix B:")
+    print(b, '\n')
 
-    # solution
-    x = solution(a, b)
+    print("TDMA:")
+    x = tdma(x, y, z, b)
     print('x =', x, '\n')
 
-    print("A * x:", a.dot(x))
+    print("Numpy:")
+    print('x =', np.linalg.solve(a, b))
 
 
 if __name__ == "__main__":
