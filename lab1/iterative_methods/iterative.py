@@ -3,25 +3,33 @@ import math
 import copy
 from tabulate import tabulate
 
-# Погрешность
-# Euclidean distance
-def accuracy(x_old, x_new, eps):
-    sum_up = 0
-    sum_low = 0
-    for k in range(len(x_old)):
-        sum_up += (x_new[k] - x_old[k]) ** 2
-        sum_low += (x_new[k]) ** 2
-        
-    return math.sqrt(sum_up / sum_low) < eps
+
+def finish_iterations(a, x_old, x_new, eps):
+    a_norm = np.linalg.norm(a, ord=np.inf) 
+    v_norm = np.linalg.norm(x_new - x_old, ord=np.inf)
+
+    if a_norm >= 1:
+        ans = v_norm
+    else:
+        ans = a_norm / (1 - a_norm) * v_norm
+    return ans <= eps
 
 
 def iterative(a, b, eps=0.001):
+    n = len(a)
     count = len(b)
     x = np.array([0. for k in range(count)])
+    alpha = a.copy()
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                alpha[i][j] = 0
+            else:
+                alpha[i][j] = -alpha[i][j] / a[i][i]
     
-    it = 0
     print("Iterative method:")
-    while it < 100:
+    it = 0
+    while True:
         x_prev = copy.deepcopy(x)
         for i in range(count):
             s = 0
@@ -30,19 +38,30 @@ def iterative(a, b, eps=0.001):
                     s = s + a[i][j] * x_prev[j] 
             x[i] = b[i] / a[i][i] - s / a[i][i]
         print(f'{it + 1}:', x)
-        if accuracy(x_prev, x, eps):
+        if finish_iterations(alpha, x_prev, x, eps):
             break
         it += 1
     return x    
             
 
 def seidel(a, b, eps=0.001):
+    n = len(a)
     count = len(b)
     x = np.array([0. for k in range(count)])
-    
-    it = 0
+    alpha = a.copy()
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                alpha[i][j] = 0
+            else:
+                alpha[i][j] = -alpha[i][j] / a[i][i]
+    B = np.tril(alpha, -1)
+    C = alpha - B
+    alpha = np.dot(np.linalg.inv(np.eye(n) - B), C)
+
     print("Gauss-Seidel method:")
-    while it < 100:
+    it = 0
+    while True:
         x_prev = copy.deepcopy(x)
         for i in range(count):
             s = 0
@@ -53,7 +72,7 @@ def seidel(a, b, eps=0.001):
                     s = s + a[i][j] * x_prev[j] 
             x[i] = b[i] / a[i][i] - s / a[i][i]
         print(f'{it + 1}:', x)
-        if accuracy(x_prev, x, eps):
+        if finish_iterations(alpha, x_prev, x, eps):
             break
         it += 1
     return x    

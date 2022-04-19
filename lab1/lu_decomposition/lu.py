@@ -2,66 +2,65 @@ import numpy as np
 from tabulate import tabulate
 
 
-def lu(a):
-    n = a.shape[0]
-    l = np.zeros((n, n))
-    u = a.copy()
+def lup(a):
+    n = len(a)
+    c = a.copy()
+    p = [i for i in range(n + 1)]
+    p[n] = 0
 
-    for k in range (1, n):
-        for i in range(k - 1, n):
-            for j in range (i, n):
-                l[j][i] = u[j][i] / u[i][i]
-        for i in range (k, n):
-            for j in range(k - 1, n):
-                u[i][j] = u[i][j] - l[i][k - 1] * u[k - 1][j]
-    return l, u
-
-
-def solve_lu(a, b, p=True):
-    n = a.shape[0]
-    l, u = lu(a)
-    if p:
-        print("\nMatrix L:\n", tabulate(l), '\n')
-        print("Matrix U:\n", tabulate(u), '\n')
-        print("Matrix L * U:\n", tabulate(l.dot(u)), '\n')
-    # 1. L * y = b
-    #y = []
-    #for i in range(n):
-    #    s = 0
-    #    for j in range(i):
-    #        s += y[j] * l[i][j]
-    #    y.append(b[i] - s)
-
-    y = np.linalg.solve(l, b)
-
-    # 2. U * x = y
-    #x = []
-    #for i in range(n):
-    #    s = 0
-    #    for j in range(i):
-    #        s += x[j] * u[n - i - 1][n - j - 1]
-    #    x.append((y[n - 1 - i] - s) / u[n - i - 1][n - i - 1])
-    #x.reverse()
-    x = np.linalg.solve(u, y)
-    return np.array(x)
-
-
-def det(a):
-    n = a.shape[0]
-    l, u = lu(a)
-    det = 1
     for i in range(n):
-        det *= u[i][i]
-    return det
+        pivot_value = 0
+        pivot = -1
+        for row in range(i, n):
+            if np.abs(c[row][i]) > pivot_value:
+                pivot_value = np.abs(c[row][i])
+                pivot = row
+
+        if pivot_value != 0:
+            p[i], p[pivot] = p[pivot], p[i]
+            c[[pivot, i]] = c[[i, pivot]]
+            p[n] += 1
+            
+            for j in range(i + 1, n):
+                c[j][i] /= c[i][i]
+                for k in range(i + 1, n):
+                    c[j][k] -= c[j][i] * c[i][k]
+    return c, p 
 
 
-def inverse(A):
-    E = np.eye(A.shape[0])
+def lup_solve(c, b, p):
+    n = len(c)
+    x = [None] * n
+    for i in range(n):
+        x[i] = b[p[i]]
+        for k in range(i):
+            x[i] -= c[i][k] * x[k]
+    
+    for i in range(n - 1, -1, -1):
+        for k in range(i + 1, n):
+            x[i] -= c[i][k] * x[k]
+        x[i] /= c[i][i]
+    return x
+
+
+def lup_invert(c, p):
+    n = len(c)
+    E = np.eye(len(c))
+
     inv = []
     for e in E:
-        x = solve_lu(A, e, False)
+        x = lup_solve(c, e, p)
         inv.append(x)
     return np.array(inv).T
+
+
+def lup_determinant(c, p):
+    n = len(c)
+
+    det = c[0][0]
+    for i in range(1, n):
+        det *= c[i][i]
+    return det if p[n] % 2 == 0 else -det
 
 
 def main():
@@ -74,16 +73,36 @@ def main():
     print("\nMatrix B:")
     print(b)
 
-    x = solve_lu(a, b)
-    print("\nLU:")
-    print("x =", x, '\n')
-    print("Det =", det(a), '\n')
-    print("Inverse:\n", tabulate(inverse(a)))
+    
+    c, p = lup(a)
+    print(tabulate(c))
+    print("U")
+    u = np.triu(c)
+    print(tabulate(u))
+    print("L")
+    l = np.tril(c)
+    for i in range(len(c)):
+        for j in range(len(c)):
+            if i == j:
+                l[i][j] = 1
+
+    print(tabulate(a))
+    print(p)
+    print(tabulate(l))
+
+
+    print("L * U")
+    print(tabulate(np.dot(l, u)))
+    print("\nLUP decomposition:")
+    print("x =", lup_solve(c, b, p), '\n')
+    print("Det =", lup_determinant(c, p), '\n')
+    print("Inverse\n", tabulate(lup_invert(c, p)))
 
     print("\nNumpy:")
     print("x =", np.linalg.solve(a, b), '\n')
     print("Det =", np.linalg.det(a), '\n')
-    print("Inverse:\n", tabulate(np.linalg.inv(a)))
+    print("Inverse\n", tabulate(np.linalg.inv(a)))
+
 
 
 if __name__ == "__main__":
