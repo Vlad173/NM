@@ -73,26 +73,25 @@ def main():
     print("\nMatrix B:")
     print(b)
 
-    
     c, p = lup(a)
-    print(tabulate(c))
-    print("U")
-    u = np.triu(c)
-    print(tabulate(u))
-    print("L")
+
+
+    print("\nL")
     l = np.tril(c)
     for i in range(len(c)):
         for j in range(len(c)):
             if i == j:
                 l[i][j] = 1
-
-    print(tabulate(a))
-    print(p)
     print(tabulate(l))
+
+    print("U")
+    u = np.triu(c)
+    print(tabulate(u))
 
 
     print("L * U")
     print(tabulate(np.dot(l, u)))
+
     print("\nLUP decomposition:")
     print("x =", lup_solve(c, b, p), '\n')
     print("Det =", lup_determinant(c, p), '\n')
